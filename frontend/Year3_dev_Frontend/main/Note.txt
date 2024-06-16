@@ -1,0 +1,2 @@
+>>npm install --save react-apexcharts apexcharts
+Need to install these too

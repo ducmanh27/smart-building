@@ -1,0 +1,17 @@
+- Fix page for more beauties:
+	+ In Farm page:	
+	1) Add more informations of each cart to the image of the cart, use serious image [Minh[]]	Minh
+													v
+	+ In Buiding page:										|
+	1) Fix grid option so that all charts fit in the page [Hai[]]					|
+	2) Complete "measurments available" function []							^
+	3) Complete Heatmap and place it upon the building image [Quan[]]				Hải  
+	4) Use suitable charts []                                           				v
+													|
+													|
+													^
+													Quân
+
+|
+
+- Build page for controlling sensors

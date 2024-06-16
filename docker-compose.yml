@@ -1,0 +1,59 @@
+version: '3.8'
+services: 
+  nginx:
+    container_name: webserver
+    build: 
+      context: ./frontend/Year3_dev_Frontend/main/react-admin/nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./frontend/Year3_dev_Frontend/main/react-admin/build:/usr/share/nginx/html
+      - ./frontend/Year3_dev_Frontend/main/react-admin/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks: 
+      - mynetwork
+  backend:
+    container_name: smartfarm
+    build:
+      context: ./backend/Year3_dev_Backend/main/Year3
+    volumes: 
+      - ./backend/Year3_dev_Backend/main/Year3:/usr/src/app/
+    ports:
+      - 8000:8000
+    expose:
+      - 8000
+    depends_on:
+      - my-postgres
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=django-insecure-lvmv%!as*-*mh#s69am))4x#&f0vkqy(-i0wd4*(t=qnh!oj%9
+      - ALLOWED_HOSTS=localhost,.vercel.app 
+      - ENGINE=django.db.backends.postgresql
+      - NAME=smartfarm
+      - USER=year3
+      - PASSWORD=year3
+      - HOST=my-postgres
+      - PORT=5432
+      # if you change broker MQTT, change this address 
+      - BROKER_ADDRESS=125.212.231.64
+      - BROKER_PORT=1883
+      - BROKER_TOPIC_ALIVE="farm/monitor/alive"
+    networks: 
+      - mynetwork
+    
+  my-postgres:
+    image: postgres
+    container_name: database
+    volumes: 
+      - psql-db:/usr/src/databse
+    environment:
+      POSTGRES_USER: year3
+      POSTGRES_PASSWORD: year3
+      POSTGRES_DB: smartfarm
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
+volumes:
+  psql-db:
