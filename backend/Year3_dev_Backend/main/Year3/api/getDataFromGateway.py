@@ -5,8 +5,9 @@ import psycopg2
 from datetime import datetime
 import time
 import requests
-import config
-broker = config.BROKER_ADDRESS
+import os
+
+broker = os.environ.get('BROKER_ADDRESS')
 
 thing_topic_dictionary = {"get_register": "farm/1/register",
                         "send_register_ack": "farm/1/register",
@@ -28,9 +29,6 @@ def insert_to_DB(topic,
                         __database='smartfarm', 
                         __user='year3', 
                         __password='year3',
-                        # __database='smartfarm', 
-                        # __user='year3', 
-                        # __password='year3', 
                         __host='my-postgres', 
                         __port='5432') -> None:
     
@@ -44,9 +42,8 @@ def insert_to_DB(topic,
 
     conn.autocommit = True
     cursor = conn.cursor()
-    # with self.lock:
     if topic == backend_topic_dictionary["get_sensor_data"]:
-        #Log data receive from MQTT
+        # Log data receive from MQTT
         if data["operator"] == "data_response":
             query = f'''INSERT INTO api_rawsensormonitor (room_id, node_id, co2, temp, hum, light, 
                         dust, sound, red, green, blue, tvoc, motion, time) 
@@ -61,17 +58,9 @@ def insert_to_DB(topic,
                 else:
                     record = record + (data["info"][i], )   #!< create a tupble of one element "data["info"][i]" and concatenate it to record
             print(record)    
-            
-            # record = (data["info"]["room_id"], 
-            #           data["info"]["node_id"], 
-            #           data['info']['co2'], 
-            #           data['info']['temp'], 
-            #           data['info']['hum'], 
-            #           data['info']['time'])
             cursor.execute(query, record)
             print("Successfully insert SENSORRR to PostgreSQL")
             print(f"Date_time: {datetime.fromtimestamp(data['info']['time'])}")
-            # print(f"Date_time: {datetime.fromtimestamp(data['info']['time'] - 7*60*60)}")
             cursor.close()
             conn.close()
         elif data["operator"] == "energy_data":
@@ -87,14 +76,7 @@ def insert_to_DB(topic,
                     record = record + (-1,)
                 else:
                     record = record + (data["info"][i], )   #!< create a tupble of one element "data["info"][i]" and concatenate it to record
-            print(record)    
-            
-            # record = (data["info"]["room_id"], 
-            #           data["info"]["node_id"], 
-            #           data['info']['co2'], 
-            #           data['info']['temp'], 
-            #           data['info']['hum'], 
-            #           data['info']['time'])
+            print(record) 
             cursor.execute(query, record)
             print("Successfully insert SENSORRR to PostgreSQL")
             print(f"Date_time: {datetime.fromtimestamp(data['info']['time'] - 7*60*60)}")
@@ -127,13 +109,6 @@ def insert_to_DB(topic,
             else:
                 record = record + (data["info"][i], )   #!< create a tupble of one element "data["info"][i]" and concatenate it to record
         print(record)    
-        
-        # record = (data["info"]["room_id"], 
-        #           data["info"]["node_id"], 
-        #           data['info']['co2'], 
-        #           data['info']['temp'], 
-        #           data['info']['hum'], 
-        #           data['info']['time'])
         cursor.execute(query, record)
         print("Successfully insert SENSORRR to PostgreSQL")
         print(f"Date_time: {datetime.fromtimestamp(data['info']['time'] - 7*60*60)}")
@@ -295,9 +270,6 @@ def run(topic):
                     
                     insert_to_DB(topic,
                                 msg,
-                                # 'smartfarm', 
-                                # 'year3', 
-                                # 'year3',
                                 'smartfarm',
                                 'year3',
                                 'year3',
@@ -379,14 +351,14 @@ def getDataForAqiRef():
                 conn.close()                       
         except:
             print("Erro while getting data for aqi ref")
-            continue    
+            continue 
+        time.sleep(2*60*60)  
 
 if __name__ == "__main__":
     process_list = []
     process_list.append(multiprocessing.Process(target=run, args=(backend_topic_dictionary["room_sync_gateway_backend"],))) #!< must have ',' in the finishing of set args
     process_list.append(multiprocessing.Process(target=run, args=(backend_topic_dictionary["get_sensor_data"],)))          #!< must have ',' in the finishing of set args
     process_list.append(multiprocessing.Process(target=run, args=(backend_topic_dictionary["get_actuator_data"],)))        #!< must have ',' in the finishing of set args
-    process_list.append(multiprocessing.Process(target=run, args=(backend_topic_dictionary["test"],)))        #!< must have ',' in the finishing of set args
     process_list.append(multiprocessing.Process(target=getDataForAqiRef))
 
     for i in process_list:

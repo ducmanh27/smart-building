@@ -6,7 +6,6 @@ import psycopg2
 import json
 import time
 from datetime import datetime
-import os
 # Information Database PostgreSQL
 db_config = {
     'dbname': 'smartfarm',

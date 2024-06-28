@@ -21,12 +21,12 @@ idna==3.4
 incremental==22.10.0
 kiwisolver==1.4.5
 # matplotlib==3.7.2
-numpy==1.25.0
+# numpy==1.25.0
 packaging==23.1
 paho-mqtt==1.6.1
-pandas==1.5.2
+# pandas==1.5.2
 Pillow==10.0.0
-psycopg2==2.9.3
+# psycopg2==2.9.3
 psycopg2-binary==2.9.9
 pyasn1==0.5.0
 pyasn1-modules==0.3.0
