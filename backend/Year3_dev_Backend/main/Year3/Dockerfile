@@ -6,22 +6,17 @@ ENV PYTHONDONTWRITEBYTECODE 1
 
 ENV PYTHONUNBUFFERED 1
 
+RUN pip install --upgrade pip
+COPY ./requirements.txt /usr/src/app/requirements.txt
+RUN pip install -r requirements.txt
+
 COPY ./entrypoint.sh /usr/src/app/entrypoint.sh
 
 COPY . /usr/src/app/
 
-
 ENTRYPOINT [ "/usr/src/app/entrypoint.sh" ]
-RUN apk add --no-cache postgresql-libs  \
-    supervisor python3 python3-dev gcc g++ postgresql-dev libpq-dev\
-    gfortran musl-dev
-    
-RUN pip install --upgrade pip
-RUN pip install --upgrade setuptools
+RUN apk add supervisor 
 
-COPY ./requirements.txt /usr/src/app/requirements.txt
-RUN pip3 install --upgrade pip setuptools &&\
-    pip install -r requirements.txt
-
+# RUN pip install --upgrade setuptools
 COPY ./supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisor.conf"]
