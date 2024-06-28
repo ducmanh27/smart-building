@@ -11,7 +11,6 @@ from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.response import Response
 from django.http import JsonResponse
-
 # import numpy as np
 from .SetPoint import SetPoint
 from rest_framework import authentication, permissions
@@ -28,7 +27,6 @@ from api.serializers import (
     RawActuatorMonitorSerializer,
     SetTimerHistorySerializer,
 )
-
 # import pandas as pd
 import math
 import time
@@ -97,7 +95,7 @@ def getSensorSecondlyData(request, *args, **kwargs):
             )  # 1 Year
         else:
             filter_time = ctime - ctime % (24 * 60 * 60)  # default 24 hour
-
+            
         logging.debug(f"Time start: {datetime.datetime.fromtimestamp(filter_time)}")
         logging.debug(f"Time end: {datetime.datetime.fromtimestamp(ctime)}")
 
