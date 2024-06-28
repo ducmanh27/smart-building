@@ -6,7 +6,7 @@ from datetime import datetime
 import time
 import requests
 import config
-broker = config.BROKER_ADDRESS
+broker = os.environ.get('BROKER_ADDRESS')
 
 thing_topic_dictionary = {"get_register": "farm/1/register",
                         "send_register_ack": "farm/1/register",
