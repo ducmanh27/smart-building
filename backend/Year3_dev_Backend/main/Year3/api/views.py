@@ -606,34 +606,6 @@ def getRoomInformationTag(request, *args, **kwargs):
                 "tvoc",
                 "motion",
             }
-            # average_data_to_return = {}
-            # # for element in latest_data_of_each_node_id_in_this_room:
-            # df = pd.DataFrame(latest_data_of_each_node_id_in_this_room)
-            # df.sort_values(
-            #     by="time",
-            #     ascending=False,
-            #     inplace=True,
-            # )
-            # average_data_to_return["time"] = df.iloc[0][
-            #     "time"
-            # ]  #!< get the time of the latest record
-            # df = df.replace(-1, np.nan)
-            # average_df = df.mean(
-            #     numeric_only=True,
-            # )  #!< calculate average value of all column existing in dataframe
-            # for para in parameter_key_list:
-            #     if para in average_df:
-            #         if para not in average_data_to_return:
-            #             average_data_to_return[para] = []
-            #             average_data_to_return[para].append(
-            #                 int(average_df[para]) if str(average_df[para]) != "nan" else -1
-            #             )
-            #         else:
-            #             average_data_to_return[para].append(
-            #                 int(average_df[para]) if str(average_df[para]) != "nan" else -1
-            #             )
-            #     else:
-            #         continue
             average_data_to_return = {}
 
             # Find the latest timestamp
@@ -720,6 +692,8 @@ def getRoomInformationTag(request, *args, **kwargs):
 #           "hourly": ...,
 #           "daily": ...,
 #       }
+
+
 @api_view(["GET"])
 # @authentication_classes([jwtauthentication.JWTAuthentication])
 # @permission_classes([permissions.IsAuthenticated])
@@ -799,17 +773,21 @@ def AQIdustpm2_5(request, *args, **kwargs):
             pre_row = None
             l = []
             first_record_flag = True
-            # logging.debug(extracted_data)
+
             for data in extracted_data:
+                data_time = datetime.datetime.fromtimestamp(data["time"])
+                logging.debug(data_time)
+                data_hour = data_time.hour
                 if first_record_flag:
-                    pre_row = data["time"]
+                    pre_row = data_hour
                     l.append({"value": data["dust"], "pow": power_index})
                     first_record_flag = False
                 else:
-                    dif = pre_row - data["time"]
-                    pre_row = data["time"]
+                    dif = pre_row - data_hour
+                    pre_row = data_hour
                     power_index = int(power_index + dif)
                     l.append({"value": data["dust"], "pow": power_index})
+
             logging.debug(f"Value l = {l}")
             temp_list = [i["value"] for i in l]
             logging.debug(f"temp list: {temp_list}")
@@ -858,77 +836,24 @@ def AQIdustpm2_5(request, *args, **kwargs):
                 }
             )
             return Response(
-                {"hourly": hourly, "daily": 0, "time": latest_time}, status=200
+                {
+                    "hourly": hourly_dust,
+                    "daily": 0,
+                    "time": hourly_dust_data[-1]["time"],
+                },
+                status=200,
             )
-        # if len(hourly_dust_data) != 0:
-        #     df = pd.DataFrame(hourly_dust_data)
-        #     df = df[["time", "id", "dust"]]
-        #     df["datetime"] = pd.to_datetime(df["time"], unit="s")
-        #     df["hour"] = df["datetime"].dt.hour
-        #     df = df.groupby(["hour"], as_index=False).mean()
-        #     df.sort_values(by="hour", ascending=False, inplace=True)
-        #     # print(df)
-        #     power_index = 0
-        #     pre_row = None
-        #     l = []
-        #     first_record_flag = True
-        #     for index, row in df.iterrows():
-        #         if first_record_flag:
-        #             pre_row = row["hour"]
-        #             l.append({"value": row["dust"], "pow": power_index})
-        #             first_record_flag = False
-        #         else:
-        #             dif = pre_row - row["hour"]
-        #             pre_row = row["hour"]
-        #             power_index = int(power_index + dif)
-        #             l.append({"value": row["dust"], "pow": power_index})
-
-        #     # print(l)
-        #     temp_list = [i["value"] for i in l]
-        #     range = round(max(temp_list) - min(temp_list), 1)
-        #     scaled_rate_of_change = range / max(temp_list)
-        #     weight_factor = 1 - scaled_rate_of_change
-        #     weight_factor = 0.5 if weight_factor < 0.5 else round(weight_factor, 1)
-        #     sum = 0
-        #     sum_of_power = 0
-
-        #     for i in l:
-        #         sum = sum + i["value"] * pow(weight_factor, i["pow"])
-        #         sum_of_power = sum_of_power + pow(weight_factor, i["pow"])
-
-        #     hourly = round(sum / sum_of_power, 1)
-        #     conclo = None
-        #     conchi = None
-        #     aqilo = None
-        #     aqihi = None
-        #     for i in pm2_5_table:
-        #         if round(hourly) > 500:
-        #             hourly = 500
-        #             break
-        #         if round(hourly) <= i["conchi"] and round(hourly) >= i["conclo"]:
-        #             conclo = i["conclo"]
-        #             conchi = i["conchi"]
-        #             aqilo = i["aqilo"]
-        #             aqihi = i["aqihi"]
-        #             hourly = round(
-        #                 (aqihi - aqilo) * (hourly - conclo) / (conchi - conclo) + aqilo
-        #             )
-        #             break
-        #     # print(hourly)
-        #     return Response({"hourly": hourly, "daily": 0, "time": latest_time}, status=200)
         else:
-            # return Response(
-            #     {"Response": "No data available!"},
-            #     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            # )
-            return Response({"hourly": 50, "daily": 0, "time": 1719636590}, status=200)
+            return Response(
+                {"Response": "No data available!"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     except:
-        # return Response(
-        #     {"Response": "Error on server!"},
-        #     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        # )
-        return Response({"hourly": 50, "daily": 0, "time": 1719636590}, status=200)
+        return Response(
+            {"Response": "Error on server!"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 ##
