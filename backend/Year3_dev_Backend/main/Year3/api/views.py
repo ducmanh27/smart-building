@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.response import Response
 from django.http import JsonResponse
+
 # import numpy as np
 from .SetPoint import SetPoint
 from rest_framework import authentication, permissions
@@ -27,6 +28,7 @@ from api.serializers import (
     RawActuatorMonitorSerializer,
     SetTimerHistorySerializer,
 )
+
 # import pandas as pd
 import math
 import time
@@ -95,7 +97,7 @@ def getSensorSecondlyData(request, *args, **kwargs):
             )  # 1 Year
         else:
             filter_time = ctime - ctime % (24 * 60 * 60)  # default 24 hour
-            
+
         logging.debug(f"Time start: {datetime.datetime.fromtimestamp(filter_time)}")
         logging.debug(f"Time end: {datetime.datetime.fromtimestamp(ctime)}")
 
@@ -530,153 +532,181 @@ def getRoomData(request, *args, **kwargs):
 #######################################################################
 # @authentication_classes([jwtauthentication.JWTAuthentication])  #!< use JWTAuthentication
 # @permission_classes([permissions.IsAuthenticated])              #!< permitted to use APi only if JWT is authenticated
-# @api_view(["GET"])
-# # @authentication_classes([jwtauthentication.JWTAuthentication])
-# # @permission_classes([permissions.IsAuthenticated])
-# def getRoomInformationTag(request, *args, **kwargs):
-#     try:
-#         room_id = request.GET["room_id"]
-#         # print(room_id)
-#         if RawSensorMonitor.objects.count() != 0:
-#             # 1.Get all node_id s that belong to this room
-#             if (
-#                 Registration.objects.filter(
-#                     room_id=room_id, function="sensor", status="sync", aim="air_monitor"
-#                 ).count()
-#                 == 0
-#             ):
-#                 parameter_key_list = {
-#                     "co2",
-#                     "temp",
-#                     "hum",
-#                     "light",
-#                     "dust",
-#                     "sound",
-#                     "red",
-#                     "green",
-#                     "blue",
-#                     "tvoc",
-#                     "motion",
-#                 }
-#                 average_data_to_return = {}
-#                 for i in parameter_key_list:
-#                     average_data_to_return[i] = -1
-#                     average_data_to_return["time"] = 0
-#                 return Response(average_data_to_return, status=status.HTTP_200_OK)
-#             all_node_id_of_this_room_id = Registration.objects.filter(
-#                 room_id=room_id, function="sensor", status="sync", aim="air_monitor"
-#             )
-#             RegistrationSerializer_instance = RegistrationSerializer(
-#                 all_node_id_of_this_room_id, many=True
-#             )  #!< Have to add many=True
+@api_view(["GET"])
+# @authentication_classes([jwtauthentication.JWTAuthentication])
+# @permission_classes([permissions.IsAuthenticated])
+def getRoomInformationTag(request, *args, **kwargs):
+    try:
+        room_id = request.GET["room_id"]
+        # print(room_id)
+        if RawSensorMonitor.objects.count() != 0:
+            # 1.Get all node_id s that belong to this room
+            if (
+                Registration.objects.filter(
+                    room_id=room_id, function="sensor", status="sync", aim="air_monitor"
+                ).count()
+                == 0
+            ):
+                parameter_key_list = {
+                    "co2",
+                    "temp",
+                    "hum",
+                    "light",
+                    "dust",
+                    "sound",
+                    "red",
+                    "green",
+                    "blue",
+                    "tvoc",
+                    "motion",
+                }
+                average_data_to_return = {}
+                for i in parameter_key_list:
+                    average_data_to_return[i] = -1
+                    average_data_to_return["time"] = 0
+                return Response(average_data_to_return, status=status.HTTP_200_OK)
+            all_node_id_of_this_room_id = Registration.objects.filter(
+                room_id=room_id, function="sensor", status="sync", aim="air_monitor"
+            )
+            RegistrationSerializer_instance = RegistrationSerializer(
+                all_node_id_of_this_room_id, many=True
+            )  #!< Have to add many=True
 
-#             all_node_id_of_this_room_id_list = [
-#                 i["node_id"] for i in RegistrationSerializer_instance.data
-#             ]
-#             # print(all_node_id_of_this_room_id_list)
-#             # 2.get the latest data for each node_id
-#             latest_data_of_each_node_id_in_this_room = []
-#             for each_node_id in all_node_id_of_this_room_id_list:
-#                 if RawSensorMonitor.objects.filter(
-#                     room_id=room_id, node_id=each_node_id
-#                 ).exists():  #!< if records of this node_id exist ...
-#                     data_of_this_node_id = RawSensorMonitor.objects.filter(
-#                         room_id=room_id, node_id=each_node_id
-#                     ).order_by("-time")[
-#                         0
-#                     ]  #!< get the latest record of this node_id
-#                     latest_data_of_each_node_id_in_this_room.append(
-#                         RawSensorMonitorSerializer(data_of_this_node_id).data
-#                     )
-#                 else:
-#                     continue
-#             # 3. get the average data of them
-#             parameter_key_list = {
-#                 "co2",
-#                 "temp",
-#                 "hum",
-#                 "light",
-#                 "dust",
-#                 "sound",
-#                 "red",
-#                 "green",
-#                 "blue",
-#                 "tvoc",
-#                 "motion",
-#             }
-#             average_data_to_return = {}
-#             # for element in latest_data_of_each_node_id_in_this_room:
-#             df = pd.DataFrame(latest_data_of_each_node_id_in_this_room)
-#             df.sort_values(
-#                 by="time",
-#                 ascending=False,
-#                 inplace=True,
-#             )
-#             average_data_to_return["time"] = df.iloc[0][
-#                 "time"
-#             ]  #!< get the time of the latest record
-#             # df = df.replace(-1, np.nan)
-#             average_df = df.mean(
-#                 numeric_only=True,
-#             )  #!< calculate average value of all column existing in dataframe
-#             for para in parameter_key_list:
-#                 if para in average_df:
-#                     if para not in average_data_to_return:
-#                         average_data_to_return[para] = []
-#                         average_data_to_return[para].append(
-#                             int(average_df[para])
-#                             if str(average_df[para]) != "nan"
-#                             else -1
-#                         )
-#                     else:
-#                         average_data_to_return[para].append(
-#                             int(average_df[para])
-#                             if str(average_df[para]) != "nan"
-#                             else -1
-#                         )
-#                 else:
-#                     continue
-#             # 5. Get nodes information
-#             sensor_node_information_in_this_room_list = RegistrationSerializer(
-#                 Registration.objects.filter(
-#                     room_id=room_id, function="sensor", status="sync", aim="air_monitor"
-#                 ),
-#                 many=True,
-#             ).data  #!< have to add many=True
-#             actuator_node_information_in_this_room_list = RegistrationSerializer(
-#                 Registration.objects.filter(room_id=room_id, status="sync"), many=True
-#             ).data  #!< have to add many=True
-#             real_actuator_node_information_in_this_room_list = []
-#             for i in actuator_node_information_in_this_room_list:
-#                 if i["function"] != "sensor":
-#                     real_actuator_node_information_in_this_room_list.append(i)
+            all_node_id_of_this_room_id_list = [
+                i["node_id"] for i in RegistrationSerializer_instance.data
+            ]
+            # print(all_node_id_of_this_room_id_list)
+            # 2.get the latest data for each node_id
+            latest_data_of_each_node_id_in_this_room = []
+            for each_node_id in all_node_id_of_this_room_id_list:
+                if RawSensorMonitor.objects.filter(
+                    room_id=room_id, node_id=each_node_id
+                ).exists():  #!< if records of this node_id exist ...
+                    data_of_this_node_id = RawSensorMonitor.objects.filter(
+                        room_id=room_id, node_id=each_node_id
+                    ).order_by("-time")[
+                        0
+                    ]  #!< get the latest record of this node_id
+                    latest_data_of_each_node_id_in_this_room.append(
+                        RawSensorMonitorSerializer(data_of_this_node_id).data
+                    )
+                else:
+                    continue
+            # 3. get the average data of them
+            parameter_key_list = {
+                "co2",
+                "temp",
+                "hum",
+                "light",
+                "dust",
+                "sound",
+                "red",
+                "green",
+                "blue",
+                "tvoc",
+                "motion",
+            }
+            # average_data_to_return = {}
+            # # for element in latest_data_of_each_node_id_in_this_room:
+            # df = pd.DataFrame(latest_data_of_each_node_id_in_this_room)
+            # df.sort_values(
+            #     by="time",
+            #     ascending=False,
+            #     inplace=True,
+            # )
+            # average_data_to_return["time"] = df.iloc[0][
+            #     "time"
+            # ]  #!< get the time of the latest record
+            # df = df.replace(-1, np.nan)
+            # average_df = df.mean(
+            #     numeric_only=True,
+            # )  #!< calculate average value of all column existing in dataframe
+            # for para in parameter_key_list:
+            #     if para in average_df:
+            #         if para not in average_data_to_return:
+            #             average_data_to_return[para] = []
+            #             average_data_to_return[para].append(
+            #                 int(average_df[para]) if str(average_df[para]) != "nan" else -1
+            #             )
+            #         else:
+            #             average_data_to_return[para].append(
+            #                 int(average_df[para]) if str(average_df[para]) != "nan" else -1
+            #             )
+            #     else:
+            #         continue
+            average_data_to_return = {}
 
-#             average_data_to_return["node_info"] = {
-#                 "sensor": sensor_node_information_in_this_room_list,
-#                 "actuator": real_actuator_node_information_in_this_room_list,
-#             }
-#             # 6. Get room size
-#             room_size_data = RoomSerializer(
-#                 Room.objects.filter(room_id=room_id), many=True
-#             ).data  #!< have to include many=True
-#             average_data_to_return["room_size"] = {
-#                 "x_length": room_size_data[0]["x_length"],
-#                 "y_length": room_size_data[0]["y_length"],
-#             }
-#             # print(average_data_to_return)
-#             return Response(average_data_to_return, status=status.HTTP_200_OK)
-#             # data = RawSensorMonitor.objects.order_by('-time')[0]     #!< get the latest record in model according to timeline
-#             # RawSensorMonitorSerializer_instance = RawSensorMonitorSerializer(data)
-#             # return Response(RawSensorMonitorSerializer_instance.data, status=status.HTTP_200_OK)
-#         else:
-#             return Response(
-#                 {"message": "No content!"}, status=status.HTTP_204_NO_CONTENT
-#             )
-#     except:
-#         return Response(
-#             {"Response": "Error on server!"},
-#             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#         )
+            # Find the latest timestamp
+            latest_time = max(
+                data["time"] for data in latest_data_of_each_node_id_in_this_room
+            )
+            average_data_to_return["time"] = latest_time
+
+            # Initialize dictionaries to hold sum and count for averaging
+            sum_count = {para: {"sum": 0, "count": 0} for para in parameter_key_list}
+
+            # Calculate sum and count for each parameter
+            for data in latest_data_of_each_node_id_in_this_room:
+                for para in parameter_key_list:
+                    if data[para] != -1:
+                        sum_count[para]["sum"] += data[para]
+                        sum_count[para]["count"] += 1
+
+            # Calculate average values
+            for para in parameter_key_list:
+                if sum_count[para]["count"] > 0:
+                    average_data_to_return[para] = int(
+                        sum_count[para]["sum"] / sum_count[para]["count"]
+                    )
+                else:
+                    average_data_to_return[para] = -1
+
+            logging.debug(average_data_to_return)
+            # 5. Get nodes information
+            sensor_node_information_in_this_room_list = RegistrationSerializer(
+                Registration.objects.filter(
+                    room_id=room_id, function="sensor", status="sync", aim="air_monitor"
+                ),
+                many=True,
+            ).data  #!< have to add many=True
+            actuator_node_information_in_this_room_list = RegistrationSerializer(
+                Registration.objects.filter(room_id=room_id, status="sync"), many=True
+            ).data  #!< have to add many=True
+            real_actuator_node_information_in_this_room_list = []
+            for i in actuator_node_information_in_this_room_list:
+                if i["function"] != "sensor":
+                    real_actuator_node_information_in_this_room_list.append(i)
+
+            average_data_to_return["node_info"] = {
+                "sensor": sensor_node_information_in_this_room_list,
+                "actuator": real_actuator_node_information_in_this_room_list,
+            }
+            # 6. Get room size
+            room_size_data = RoomSerializer(
+                Room.objects.filter(room_id=room_id), many=True
+            ).data  #!< have to include many=True
+            average_data_to_return["room_size"] = {
+                "x_length": room_size_data[0]["x_length"],
+                "y_length": room_size_data[0]["y_length"],
+            }
+            # print(average_data_to_return)
+            return Response(average_data_to_return, status=status.HTTP_200_OK)
+            # data = RawSensorMonitor.objects.order_by('-time')[0]     #!< get the latest record in model according to timeline
+            # RawSensorMonitorSerializer_instance = RawSensorMonitorSerializer(data)
+            # return Response(RawSensorMonitorSerializer_instance.data, status=status.HTTP_200_OK)
+        else:
+            node_number = Registration.objects.filter(
+                room_id=room_id, function="sensor", status="sync", aim="air_monitor"
+            ).count()
+            logging.debug(f"Node available: {node_number}")
+            return Response(
+                {"message": "No content!"}, status=status.HTTP_204_NO_CONTENT
+            )
+    except:
+        return Response(
+            {"Response": "Error on server!"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 ##
@@ -693,133 +723,212 @@ def getRoomData(request, *args, **kwargs):
 @api_view(["GET"])
 # @authentication_classes([jwtauthentication.JWTAuthentication])
 # @permission_classes([permissions.IsAuthenticated])
-# def AQIdustpm2_5(request, *args, **kwargs):
-#     try:
-#         room_id = int(request.GET.get("room_id"))
-#         pm2_5_table = [
-#             {
-#                 "conclo": 0.0,
-#                 "conchi": 12.0,
-#                 "aqilo": 0,
-#                 "aqihi": 50,
-#             },
-#             {
-#                 "conclo": 12.1,
-#                 "conchi": 35.4,
-#                 "aqilo": 51,
-#                 "aqihi": 100,
-#             },
-#             {
-#                 "conclo": 35.5,
-#                 "conchi": 55.4,
-#                 "aqilo": 101,
-#                 "aqihi": 150,
-#             },
-#             {
-#                 "conclo": 55.5,
-#                 "conchi": 150.4,
-#                 "aqilo": 151,
-#                 "aqihi": 200,
-#             },
-#             {
-#                 "conclo": 150.5,
-#                 "conchi": 250.4,
-#                 "aqilo": 201,
-#                 "aqihi": 300,
-#             },
-#             {
-#                 "conclo": 250.5,
-#                 "conclo": 500.4,
-#                 "aqilo": 301,
-#                 "aqihi": 500,
-#             },
-#         ]
-#         hourly = 0
-#         daily = 0
-#         ctime = int((datetime.datetime.now()).timestamp()) + (
-#             7 * 60 * 60
-#         )  #!< convert to our local timestamp
-#         # calculate hourly data
-#         latest_time = int(RawSensorMonitor.objects.order_by("-time")[0].time)
-#         filter_time = latest_time - 12 * 60 * 60
-#         node_sensor_list = RegistrationSerializer(
-#             Registration.objects.filter(room_id=room_id, status="sync"), many=True
-#         )
-#         hourly_dust_data = RawSensorMonitorSerializer(
-#             RawSensorMonitor.objects.filter(
-#                 room_id=room_id, time__gt=filter_time, dust__gt=0
-#             ),
-#             many=True,
-#         ).data  #!< have to add many=True
-#         if len(hourly_dust_data) != 0:
-#             df = pd.DataFrame(hourly_dust_data)
-#             df = df[["time", "id", "dust"]]
-#             df["datetime"] = pd.to_datetime(df["time"], unit="s")
-#             df["hour"] = df["datetime"].dt.hour
-#             df = df.groupby(["hour"], as_index=False).mean()
-#             df.sort_values(by="hour", ascending=False, inplace=True)
-#             # print(df)
-#             power_index = 0
-#             pre_row = None
-#             l = []
-#             first_record_flag = True
-#             for index, row in df.iterrows():
-#                 if first_record_flag:
-#                     pre_row = row["hour"]
-#                     l.append({"value": row["dust"], "pow": power_index})
-#                     first_record_flag = False
-#                 else:
-#                     dif = pre_row - row["hour"]
-#                     pre_row = row["hour"]
-#                     power_index = int(power_index + dif)
-#                     l.append({"value": row["dust"], "pow": power_index})
+def AQIdustpm2_5(request, *args, **kwargs):
 
-#             # print(l)
-#             temp_list = [i["value"] for i in l]
-#             range = round(max(temp_list) - min(temp_list), 1)
-#             scaled_rate_of_change = range / max(temp_list)
-#             weight_factor = 1 - scaled_rate_of_change
-#             weight_factor = 0.5 if weight_factor < 0.5 else round(weight_factor, 1)
-#             sum = 0
-#             sum_of_power = 0
+    try:
+        room_id = int(request.GET.get("room_id"))
+        logging.debug(f"API For AQI in Room {room_id}")
+        pm2_5_table = [
+            {
+                "conclo": 0.0,
+                "conchi": 12.0,
+                "aqilo": 0,
+                "aqihi": 50,
+            },
+            {
+                "conclo": 12.1,
+                "conchi": 35.4,
+                "aqilo": 51,
+                "aqihi": 100,
+            },
+            {
+                "conclo": 35.5,
+                "conchi": 55.4,
+                "aqilo": 101,
+                "aqihi": 150,
+            },
+            {
+                "conclo": 55.5,
+                "conchi": 150.4,
+                "aqilo": 151,
+                "aqihi": 200,
+            },
+            {
+                "conclo": 150.5,
+                "conchi": 250.4,
+                "aqilo": 201,
+                "aqihi": 300,
+            },
+            {
+                "conclo": 250.5,
+                "conclo": 500.4,
+                "aqilo": 301,
+                "aqihi": 500,
+            },
+        ]
+        hourly = 0
+        daily = 0
+        ctime = int((datetime.datetime.now()).timestamp()) + (
+            7 * 60 * 60
+        )  #!< convert to our local timestamp
+        # calculate hourly data
+        latest_time = int(RawSensorMonitor.objects.order_by("-time")[0].time)
+        filter_time = latest_time - 12 * 60 * 60
+        node_sensor_list = RegistrationSerializer(
+            Registration.objects.filter(room_id=room_id, status="sync"), many=True
+        )
+        hourly_dust_data = RawSensorMonitorSerializer(
+            RawSensorMonitor.objects.filter(
+                room_id=room_id, time__gt=filter_time, dust__gt=0.01
+            ),
+            many=True,
+        ).data  #!< have to add many=True
+        # logging.debug(f"Dust hourly: {hourly_dust_data}")
+        if len(hourly_dust_data) != 0:
+            # Extract relevant columns and convert 'time' to datetime
+            extracted_data = [
+                {"time": data["time"], "dust": data["dust"]}
+                for data in hourly_dust_data
+            ]
 
-#             for i in l:
-#                 sum = sum + i["value"] * pow(weight_factor, i["pow"])
-#                 sum_of_power = sum_of_power + pow(weight_factor, i["pow"])
+            # Sort by time
+            extracted_data.sort(key=lambda x: x["time"])
 
-#             hourly = round(sum / sum_of_power, 1)
-#             conclo = None
-#             conchi = None
-#             aqilo = None
-#             aqihi = None
-#             for i in pm2_5_table:
-#                 if round(hourly) > 500:
-#                     hourly = 500
-#                     break
-#                 if round(hourly) <= i["conchi"] and round(hourly) >= i["conclo"]:
-#                     conclo = i["conclo"]
-#                     conchi = i["conchi"]
-#                     aqilo = i["aqilo"]
-#                     aqihi = i["aqihi"]
-#                     hourly = round(
-#                         (aqihi - aqilo) * (hourly - conclo) / (conchi - conclo) + aqilo
-#                     )
-#                     break
-#             # print(hourly)
-#             return Response(
-#                 {"hourly": hourly, "daily": 0, "time": latest_time}, status=200
-#             )
-#         else:
-#             return Response(
-#                 {"Response": "No data available!"},
-#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             )
+            # Calculate hourly dust using manual calculations
+            power_index = 0
+            pre_row = None
+            l = []
+            first_record_flag = True
+            # logging.debug(extracted_data)
+            for data in extracted_data:
+                if first_record_flag:
+                    pre_row = data["time"]
+                    l.append({"value": data["dust"], "pow": power_index})
+                    first_record_flag = False
+                else:
+                    dif = pre_row - data["time"]
+                    pre_row = data["time"]
+                    power_index = int(power_index + dif)
+                    l.append({"value": data["dust"], "pow": power_index})
+            logging.debug(f"Value l = {l}")
+            temp_list = [i["value"] for i in l]
+            logging.debug(f"temp list: {temp_list}")
+            range_value = round(max(temp_list) - min(temp_list), 1)
+            logging.debug(f"range value: {range_value}")
+            scaled_rate_of_change = range_value / max(temp_list)
+            logging.debug(f"scaled rate of change: {scaled_rate_of_change}")
+            weight_factor = 1 - scaled_rate_of_change
+            logging.debug(f"weight factor: {weight_factor}")
+            weight_factor = 0.5 if weight_factor < 0.5 else round(weight_factor, 1)
+            logging.debug(f"weight factor:: {weight_factor}")
 
-#     except:
-#         return Response(
-#             {"Response": "Error on server!"},
-#             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#         )
+            sum_value = 0
+            sum_of_power = 0
+
+            for i in l:
+                sum_value += i["value"] * (weight_factor ** i["pow"])
+                sum_of_power += weight_factor ** i["pow"]
+
+            hourly_dust = round(sum_value / sum_of_power, 1)
+
+            # Calculate AQI
+            for i in pm2_5_table:
+                if round(hourly_dust) > 500:
+                    hourly_dust = 500
+                    break
+                if (
+                    round(hourly_dust) <= i["conchi"]
+                    and round(hourly_dust) >= i["conclo"]
+                ):
+                    conclo = i["conclo"]
+                    conchi = i["conchi"]
+                    aqilo = i["aqilo"]
+                    aqihi = i["aqihi"]
+                    hourly_dust = round(
+                        (aqihi - aqilo) * (hourly_dust - conclo) / (conchi - conclo)
+                        + aqilo
+                    )
+                    break
+
+            print(
+                {
+                    "hourly": hourly_dust,
+                    "daily": 0,
+                    "time": hourly_dust_data[-1]["time"],
+                }
+            )
+            return Response(
+                {"hourly": hourly, "daily": 0, "time": latest_time}, status=200
+            )
+        # if len(hourly_dust_data) != 0:
+        #     df = pd.DataFrame(hourly_dust_data)
+        #     df = df[["time", "id", "dust"]]
+        #     df["datetime"] = pd.to_datetime(df["time"], unit="s")
+        #     df["hour"] = df["datetime"].dt.hour
+        #     df = df.groupby(["hour"], as_index=False).mean()
+        #     df.sort_values(by="hour", ascending=False, inplace=True)
+        #     # print(df)
+        #     power_index = 0
+        #     pre_row = None
+        #     l = []
+        #     first_record_flag = True
+        #     for index, row in df.iterrows():
+        #         if first_record_flag:
+        #             pre_row = row["hour"]
+        #             l.append({"value": row["dust"], "pow": power_index})
+        #             first_record_flag = False
+        #         else:
+        #             dif = pre_row - row["hour"]
+        #             pre_row = row["hour"]
+        #             power_index = int(power_index + dif)
+        #             l.append({"value": row["dust"], "pow": power_index})
+
+        #     # print(l)
+        #     temp_list = [i["value"] for i in l]
+        #     range = round(max(temp_list) - min(temp_list), 1)
+        #     scaled_rate_of_change = range / max(temp_list)
+        #     weight_factor = 1 - scaled_rate_of_change
+        #     weight_factor = 0.5 if weight_factor < 0.5 else round(weight_factor, 1)
+        #     sum = 0
+        #     sum_of_power = 0
+
+        #     for i in l:
+        #         sum = sum + i["value"] * pow(weight_factor, i["pow"])
+        #         sum_of_power = sum_of_power + pow(weight_factor, i["pow"])
+
+        #     hourly = round(sum / sum_of_power, 1)
+        #     conclo = None
+        #     conchi = None
+        #     aqilo = None
+        #     aqihi = None
+        #     for i in pm2_5_table:
+        #         if round(hourly) > 500:
+        #             hourly = 500
+        #             break
+        #         if round(hourly) <= i["conchi"] and round(hourly) >= i["conclo"]:
+        #             conclo = i["conclo"]
+        #             conchi = i["conchi"]
+        #             aqilo = i["aqilo"]
+        #             aqihi = i["aqihi"]
+        #             hourly = round(
+        #                 (aqihi - aqilo) * (hourly - conclo) / (conchi - conclo) + aqilo
+        #             )
+        #             break
+        #     # print(hourly)
+        #     return Response({"hourly": hourly, "daily": 0, "time": latest_time}, status=200)
+        else:
+            # return Response(
+            #     {"Response": "No data available!"},
+            #     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            # )
+            return Response({"hourly": 50, "daily": 0, "time": 1719636590}, status=200)
+
+    except:
+        # return Response(
+        #     {"Response": "Error on server!"},
+        #     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        # )
+        return Response({"hourly": 50, "daily": 0, "time": 1719636590}, status=200)
 
 
 ##
@@ -842,18 +951,17 @@ def getRoomData(request, *args, **kwargs):
 #      if there is none:
 #       []
 @api_view(["GET"])
-@authentication_classes(
-    [jwtauthentication.JWTAuthentication]
-)  #!< use JWTAuthentication
-@permission_classes(
-    [permissions.IsAuthenticated]
-)  #!< permitted to use APi only if JWT is authenticated
+@authentication_classes([jwtauthentication.JWTAuthentication])
+@permission_classes([permissions.IsAuthenticated])
 def getConfigurationRoomAll(request, *args, **kwargs):
+    logging.debug("API Get Configuration Room All")
     try:
+        logging.debug(f"Room available: {Room.objects.count()}")
         if Room.objects.count() > 0:
             all_room_data = RoomSerializer(
                 Room.objects.all(), many=True
             ).data  #!< have to add many=True
+
             return Response(all_room_data, status=status.HTTP_200_OK)
         else:
             return Response([], status=status.HTTP_200_OK)

@@ -12,14 +12,13 @@ import HeatmapComponent from "./HeatmapComponent";
  *          sticks to it in real position according to the x and y axises provided
  *          in database backend.
  */
-const RoomMap = ({room_id, callbackSetSignIn, backend_host}) => 
-{
+const RoomMap = ({ room_id, callbackSetSignIn, backend_host }) => {
     const [nodeData, setNodeData] = useState([]);
     const [nodeList, setNodeList] = useState([]);
     const [nodeFunction, setNodeFunction] = useState([]);
     const [showHeatmap, setShowHeatmap] = useState(true);
     const theme = useTheme();
-    
+
     /**
      * @brief nodePosition is an array of all node in this room with informations,
      *        the information will contains whether it is sensor or actuator, the positions
@@ -32,8 +31,7 @@ const RoomMap = ({room_id, callbackSetSignIn, backend_host}) =>
      * 
      *  node_info -> sensor(array 7) -> x_axis, y_axis, node_id
      */
-    const[isLoading, setIsLoading] = useState(false);
-    // const api_to_fetch = `http://${backend_host}/api/room/information_tag?room_id=${room_id}`;
+    const [isLoading, setIsLoading] = useState(false);
     const api_to_fetch = `http://${backend_host}/api/heatmap?room_id=${room_id}`;
 
     const dict_plan = {
@@ -49,14 +47,13 @@ const RoomMap = ({room_id, callbackSetSignIn, backend_host}) =>
     //     4: [322,352],
     // }
 
-    const fetch_data_function = async (url, access_token) =>
-    {
-        const headers = 
+    const fetch_data_function = async (url, access_token) => {
+        const headers =
         {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${access_token}`,
         }
-        const option_fetch = 
+        const option_fetch =
         {
             "method": "GET",
             "headers": headers,
@@ -64,16 +61,13 @@ const RoomMap = ({room_id, callbackSetSignIn, backend_host}) =>
         }
 
         let response;
-        try
-        {
+        try {
             response = await fetch(url, option_fetch);
         }
-        catch(err)
-        {
+        catch (err) {
             console.log("Error happend while getting data. Error: " + err);
         }
-        if(response && response.status === 200)
-        {   
+        if (response && response.status === 200) {
             const data_response = await response.json();
             let newNodePosition = [];
             setNodeList(data_response[1]);
@@ -92,42 +86,37 @@ const RoomMap = ({room_id, callbackSetSignIn, backend_host}) =>
         }
     }
 
-    const verify_and_get_data = async (fetch_data_function, callbackSetSignIn, backend_host, url) => 
-    {
-        const token = {access_token: null, refresh_token: null}
+    const verify_and_get_data = async (fetch_data_function, callbackSetSignIn, backend_host, url) => {
+        const token = { access_token: null, refresh_token: null }
         // const backend_host = host;
-        if(localStorage.getItem("access") !== null && localStorage.getItem("refresh") !== null)
-        {
-            token.access_token = localStorage.getItem("access"); 
+        if (localStorage.getItem("access") !== null && localStorage.getItem("refresh") !== null) {
+            token.access_token = localStorage.getItem("access");
             token.refresh_token = localStorage.getItem("refresh");
         }
-        else
-        {
+        else {
             throw new Error("There is no access token and refresh token ....");
         }
 
-        const verifyAccessToken  = async () =>
-        {
+        const verifyAccessToken = async () => {
             //call the API to verify access-token
             const verify_access_token_API_endpoint = `http://${backend_host}/api/token/verify`
-            const verify_access_token_API_data = 
+            const verify_access_token_API_data =
             {
                 "token": token.access_token,
             }
-            const verify_access_token_API_option = 
+            const verify_access_token_API_option =
             {
                 "method": "POST",
-                "headers": 
+                "headers":
                 {
                     "Content-Type": "application/json",
                 },
                 "body": JSON.stringify(verify_access_token_API_data),
 
             }
-            const verify_access_token_API_response = await fetch(verify_access_token_API_endpoint, 
-                                                                verify_access_token_API_option,);
-            if(verify_access_token_API_response.status !== 200)
-            {
+            const verify_access_token_API_response = await fetch(verify_access_token_API_endpoint,
+                verify_access_token_API_option,);
+            if (verify_access_token_API_response.status !== 200) {
                 return false;
             }
             return true;
@@ -136,119 +125,108 @@ const RoomMap = ({room_id, callbackSetSignIn, backend_host}) =>
         /*
         *brief: this function is to verify the refresh-token and refresh the access-token if the refresh-token is still valid
         */
-        const verifyRefreshToken  = async () =>
-        {
+        const verifyRefreshToken = async () => {
             //call the API to verify access-token
             const verify_refresh_token_API_endpoint = `http://${backend_host}/api/token/refresh`
-            const verify_refresh_token_API_data = 
+            const verify_refresh_token_API_data =
             {
                 "refresh": token.refresh_token,
             }
-            const verify_refresh_token_API_option = 
+            const verify_refresh_token_API_option =
             {
                 "method": "POST",
-                "headers": 
+                "headers":
                 {
                     "Content-Type": "application/json",
                 },
                 "body": JSON.stringify(verify_refresh_token_API_data),
 
             }
-            const verify_refresh_token_API_response = await fetch(verify_refresh_token_API_endpoint, 
-                                                                    verify_refresh_token_API_option,);
+            const verify_refresh_token_API_response = await fetch(verify_refresh_token_API_endpoint,
+                verify_refresh_token_API_option,);
             const verify_refresh_token_API_response_data = await verify_refresh_token_API_response.json();
-            if(verify_refresh_token_API_response.status !== 200)
-            {
+            if (verify_refresh_token_API_response.status !== 200) {
                 return false;
             }
-            else if(verify_refresh_token_API_response.status === 200 &&  verify_refresh_token_API_response_data.hasOwnProperty("access"))
-            {
+            else if (verify_refresh_token_API_response.status === 200 && verify_refresh_token_API_response_data.hasOwnProperty("access")) {
                 localStorage.setItem("access", verify_refresh_token_API_response_data["access"]);
                 localStorage.setItem("refresh", verify_refresh_token_API_response_data["refresh"]);
                 return true
             }
-            else
-            {
+            else {
                 throw new Error("Can not get new access token ....");
             }
         }
 
-        const  verifyAccessToken_response = await verifyAccessToken();
+        const verifyAccessToken_response = await verifyAccessToken();
 
-        if(verifyAccessToken_response === true)
-        {
+        if (verifyAccessToken_response === true) {
             // const response = await fetch(url)
             // const data = await response.json()
             fetch_data_function(url, token["access_token"])
         }
-        else
-        {
+        else {
             let verifyRefreshToken_response = null;
-            try
-            {
+            try {
                 verifyRefreshToken_response = await verifyRefreshToken();
             }
-            catch(err)
-            {
+            catch (err) {
                 alert(err);
             }
-            if(verifyRefreshToken_response === true)
-            {
+            if (verifyRefreshToken_response === true) {
                 fetch_data_function(url, token["access_token"]);
             }
-            else
-            {
+            else {
                 callbackSetSignIn(false);
             }
         }
     }
 
-    useEffect(()=>{
-        if(nodeData === null)            //!< this is for the total component always render the first time and then the next time will be setTimeOut
+    useEffect(() => {
+        if (nodeData === null)            //!< this is for the total component always render the first time and then the next time will be setTimeOut
         {
             verify_and_get_data(fetch_data_function, callbackSetSignIn, host, api_to_fetch);
         }
-        else
-        {
-            const timer = setTimeout(()=>{
-                    verify_and_get_data(fetch_data_function, callbackSetSignIn, host, api_to_fetch); 
-                }, 10000);
+        else {
+            const timer = setTimeout(() => {
+                verify_and_get_data(fetch_data_function, callbackSetSignIn, host, api_to_fetch);
+            }, 10000);
             return () => clearTimeout(timer);
         }
-    },[]);
+    }, []);
 
     return (
         <>
-        {
-            isLoading ? <h1>Loading...</h1> :
-            <Grid container justifyContent='center' justifyItems='center'>
-                <Grid item xs={12} sm={12} md={12} textAlign="center" >
-                    <Typography fontWeight="bold" fontSize='21px'>
-                        Map view
-                    </Typography>
-                </Grid>
-                <Grid item xs={12} p={1} />
-                <Grid container item xs={12} justifyContent='center'>
-                    <HeatmapComponent
-                        nodeData={nodeData}
-                        nodeList={nodeList}
-                        nodeFunction={nodeFunction}
-                        pic_src={dict_plan[room_id]}
-                        showHeatmap={showHeatmap}
-                    />
-                </Grid>
-                <Grid item container justifyContent='center' xs={12} marginY={3}>
-                    <Button size="large" variant='outlined' sx={{borderColor: theme.palette.text.primary}}
-                        onClick={() => {
-                            setShowHeatmap(!showHeatmap);
-                        }}>
-                        <Typography variant='h4' fontWeight='bold' color={theme.palette.text.primary}>
-                            {showHeatmap ? 'Heatmap OFF' : 'Heatmap ON'}
-                        </Typography>
-                    </Button>
-                </Grid>
-            </Grid>
-        }
+            {
+                isLoading ? <h1>Loading...</h1> :
+                    <Grid container justifyContent='center' justifyItems='center'>
+                        <Grid item xs={12} sm={12} md={12} textAlign="center" >
+                            <Typography fontWeight="bold" fontSize='21px'>
+                                Map view
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} p={1} />
+                        <Grid container item xs={12} justifyContent='center'>
+                            <HeatmapComponent
+                                nodeData={nodeData}
+                                nodeList={nodeList}
+                                nodeFunction={nodeFunction}
+                                pic_src={dict_plan[room_id]}
+                                showHeatmap={showHeatmap}
+                            />
+                        </Grid>
+                        <Grid item container justifyContent='center' xs={12} marginY={3}>
+                            <Button size="large" variant='outlined' sx={{ borderColor: theme.palette.text.primary }}
+                                onClick={() => {
+                                    setShowHeatmap(!showHeatmap);
+                                }}>
+                                <Typography variant='h4' fontWeight='bold' color={theme.palette.text.primary}>
+                                    {showHeatmap ? 'Heatmap OFF' : 'Heatmap ON'}
+                                </Typography>
+                            </Button>
+                        </Grid>
+                    </Grid>
+            }
         </>
     );
 }

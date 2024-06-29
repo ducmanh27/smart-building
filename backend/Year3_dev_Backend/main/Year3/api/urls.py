@@ -19,8 +19,10 @@ urlpatterns = [
     path(
         "room", views.getRoomData
     ),  #!< api for getting room data for langingPage component on frontend
-    # path('room/information_tag', views.getRoomInformationTag),  #!< api for InformationTag component
-    # path('room/AQIdustpm2_5', views.AQIdustpm2_5),  #!< api for InformationTag component
+    path(
+        "room/information_tag", views.getRoomInformationTag
+    ),  #!< api for InformationTag component
+    path("room/AQIdustpm2_5", views.AQIdustpm2_5),  #!< api for InformationTag component
     path("actuator_status", views.getActuatorStatus),
     path("actuator_command", views.setActuator),
     path(
