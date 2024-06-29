@@ -678,3 +678,29 @@
 2024-06-29 06:32:40,536 INFO success: django entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
 2024-06-29 06:32:40,536 INFO success: getDataFromGateway entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
 2024-06-29 06:32:40,536 INFO success: openweatherAPI entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-06-29 11:39:05,985 WARN received SIGTERM indicating exit request
+2024-06-29 11:39:05,996 INFO waiting for django, getDataFromGateway, openweatherAPI to die
+2024-06-29 11:39:06,003 WARN stopped: openweatherAPI (terminated by SIGTERM)
+2024-06-29 11:39:07,011 WARN stopped: getDataFromGateway (terminated by SIGTERM)
+2024-06-29 11:39:07,640 INFO stopped: django (exit status 0)
+2024-06-29 11:39:10,477 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-06-29 11:39:10,479 INFO supervisord started with pid 1
+2024-06-29 11:39:11,484 INFO spawned: 'django' with pid 9
+2024-06-29 11:39:11,489 INFO spawned: 'getDataFromGateway' with pid 10
+2024-06-29 11:39:11,490 INFO spawned: 'openweatherAPI' with pid 11
+2024-06-29 11:39:13,220 INFO success: django entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-06-29 11:39:13,220 INFO success: getDataFromGateway entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-06-29 11:39:13,220 INFO success: openweatherAPI entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-06-29 12:42:15,925 WARN received SIGTERM indicating exit request
+2024-06-29 12:42:15,934 INFO waiting for django, getDataFromGateway, openweatherAPI to die
+2024-06-29 12:42:15,941 WARN stopped: openweatherAPI (terminated by SIGTERM)
+2024-06-29 12:42:16,948 WARN stopped: getDataFromGateway (terminated by SIGTERM)
+2024-06-29 12:42:17,654 INFO stopped: django (exit status 0)
+2024-06-29 12:42:20,759 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-06-29 12:42:20,761 INFO supervisord started with pid 1
+2024-06-29 12:42:21,764 INFO spawned: 'django' with pid 9
+2024-06-29 12:42:21,766 INFO spawned: 'getDataFromGateway' with pid 10
+2024-06-29 12:42:21,768 INFO spawned: 'openweatherAPI' with pid 11
+2024-06-29 12:42:22,811 INFO success: django entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-06-29 12:42:22,812 INFO success: getDataFromGateway entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-06-29 12:42:22,812 INFO success: openweatherAPI entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)

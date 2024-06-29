@@ -6,6 +6,9 @@ from datetime import datetime
 import time
 import requests
 import os
+_ONE_SECOND = 1
+_ONE_MINUTE = 60 * _ONE_SECOND
+_ONE_HOUR = 60 * _ONE_MINUTE
 
 broker = os.environ.get('BROKER_ADDRESS')
 
