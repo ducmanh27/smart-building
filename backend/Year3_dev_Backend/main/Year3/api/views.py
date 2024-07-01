@@ -497,9 +497,11 @@ def getRoomInformationTag(request, *args, **kwargs):
 
             # Calculate average values
             for para in parameter_key_list:
+                average_data_to_return[para] = []
+            for para in parameter_key_list:
                 if sum_count[para]["count"] > 0:
-                    average_data_to_return[para] = int(
-                        sum_count[para]["sum"] / sum_count[para]["count"]
+                    average_data_to_return[para].append(
+                        int(sum_count[para]["sum"] / sum_count[para]["count"])
                     )
                 else:
                     average_data_to_return[para] = -1

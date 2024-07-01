@@ -13,16 +13,6 @@ _ONE_HOUR = 60 * _ONE_MINUTE
 
 broker = os.environ.get("BROKER_ADDRESS")
 
-thing_topic_dictionary = {
-    "get_register": "farm/1/register",
-    "send_register_ack": "farm/1/register",
-    "get_alive_status": "farm/1/alive",
-    "get_sensor_data": "farm/1/sensor",
-    "get_actuator_data": "farm/1/actuator",
-    "send_setpoint": "farm/1/actuator",
-    "send_setpoint_ack": "farm/1/actuator",
-}
-
 backend_topic_dictionary = {
     "get_sensor_data": "farm/monitor/sensor",
     "get_actuator_data": "farm/monitor/actuator",
@@ -335,6 +325,7 @@ def run(topic):
             except:
                 print("!!!!!Error in getDataFromGateway.py while synchronizing")
                 time.sleep(10)
+            time.sleep(_ONE_SECOND)
 
     else:
         while 1:
