@@ -34,7 +34,7 @@ services:
       - HOST=my-postgres
       - PORT=5432
       # if you change broker MQTT, change this address 
-      - BROKER_ADDRESS=27.71.16.120
+      - BROKER_ADDRESS=0.0.0.0
       - BROKER_PORT=1883
       - BROKER_TOPIC_ALIVE="farm/monitor/alive"
     networks:
